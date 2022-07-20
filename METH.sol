@@ -409,7 +409,27 @@ contract METH {
     } else if (to == address(museeMarket)) {
       revert METH_Cannot_Withdraw_To_Market();
     }
+   // Allocate arrays
+    expiries = new uint256[](lockedCount);
+    amounts = new uint256[](lockedCount);
 
+    // Populate results
+    uint256 i;
+    // The number of buckets is always < 256 bits.
+    unchecked {
+      for (uint256 escrowIndex = accountInfo.lockupStartIndex; ; ++escrowIndex) {
+        LockedBalance.Lockup memory escrow = accountInfo.lockups.get(escrowIndex);
+        if (escrow.expiration == 0) {
+          break;
+        }
+        if (escrow.expiration >= block.timestamp && escrow.totalAmount != 0) {
+          expiries[i] = escrow.expiration;
+          amounts[i] = escrow.totalAmount;
+          ++i;
+        }
+      }
+    }
+  }
     AccountInfo storage accountInfo = _freeFromEscrow(from);
     if (from != msg.sender) {
       _deductAllowanceFrom(accountInfo, amount, from);
@@ -535,6 +555,16 @@ contract METH {
     } else if (msg.value != amount) {
       // There's no reason to send msg.value more than the amount being locked up
       revert METH_Too_Much_ETH_Provided();
+    } 
+    
+    /* solhint-disable-next-line code-complexity */
+  function _removeFromLockedBalance(
+    address account,
+    uint256 expiration,
+    uint256 amount
+  ) private returns (AccountInfo storage) {
+    if (expiration < block.timestamp) {
+      revert METH_Escrow_Expired();
     }
 
     // Add to locked escrow
