@@ -555,6 +555,16 @@ contract METH {
     } else if (msg.value != amount) {
       // There's no reason to send msg.value more than the amount being locked up
       revert METH_Too_Much_ETH_Provided();
+    } 
+    
+    /* solhint-disable-next-line code-complexity */
+  function _removeFromLockedBalance(
+    address account,
+    uint256 expiration,
+    uint256 amount
+  ) private returns (AccountInfo storage) {
+    if (expiration < block.timestamp) {
+      revert METH_Escrow_Expired();
     }
 
     // Add to locked escrow
