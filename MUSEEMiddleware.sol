@@ -379,6 +379,40 @@ contract MUSEEMiddleware is Constants {
       // Nothing
       details = string.concat(details, " has not listed nor gotten an offer");
     }
+    
+    // Populate rev splits, including any percent splits
+    uint256 revSplitIndex = 0;
+    for (uint256 i = 0; i < creatorRecipients.length; ++i) {
+      if (address(creatorRecipients[i]).isContract()) {
+        try PercentSplitETH(creatorRecipients[i]).getShareLength{ gas: READ_ONLY_GAS_LIMIT }() returns (
+          uint256 recipientCount
+        ) {
+          uint256 totalSplitShares;
+          for (uint256 splitIndex = 0; splitIndex < recipientCount; ++splitIndex) {
+            uint256 share = PercentSplitETH(creatorRecipients[i]).getPercentInBasisPointsByIndex(splitIndex);
+            totalSplitShares += share;
+          }
+          for (uint256 splitIndex = 0; splitIndex < recipientCount; ++splitIndex) {
+            uint256 splitShare = (PercentSplitETH(creatorRecipients[i]).getPercentInBasisPointsByIndex(splitIndex) *
+              BASIS_POINTS) / totalSplitShares;
+            splitShare = (splitShare * creatorShares[i]) / BASIS_POINTS;
+            creatorRevSplit[revSplitIndex++] = _calcRevSplit(
+              price,
+              splitShare,
+              creatorRevBP,
+              PercentSplitETH(creatorRecipients[i]).getShareRecipientByIndex(splitIndex)
+            );
+          }
+          continue;
+        } catch // solhint-disable-next-line no-empty-blocks
+        {
+          // Not a Musee percent split
+        }
+      }
+      {
+        creatorRevSplit[revSplitIndex++] = _calcRevSplit(price, creatorShares[i], creatorRevBP, creatorRecipients[i]);
+      }
+    }
   }
 
   function _calcRevSplit(
