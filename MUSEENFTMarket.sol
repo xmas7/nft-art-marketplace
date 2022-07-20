@@ -112,6 +112,8 @@ contract MUSEENFTMarket is
     address recipient
   ) internal override(NFTMarketCore, NFTMarketReserveAuction, NFTMarketBuyPrice) {
     super._transferFromEscrowIfAvailable(nftContract, tokenId, recipient);
+    
+    emit transferEvent(nftContract, tokenId, recipient);
   }
 
   /**
