@@ -84,6 +84,8 @@ contract MUSEECollectionFactory is ICollectionFactory {
    * @param rolesContract The new roles contract address.
    */
   event RolesContractUpdated(address indexed rolesContract);
+  
+  event CollectionMade(address collectionAddress);
 
   modifier onlyAdmin() {
     require(rolesContract.isAdmin(msg.sender), "MUSEECollectionFactory: Caller does not have the Admin role");
@@ -135,6 +137,7 @@ contract MUSEECollectionFactory is ICollectionFactory {
    * @param nonce An arbitrary value used to allow a creator to mint multiple collections.
    * @return collectionAddress The address of the new collection contract.
    */
+   
   function createCollection(
     string calldata name,
     string calldata symbol,
@@ -155,6 +158,21 @@ contract MUSEECollectionFactory is ICollectionFactory {
     rolesContract = IRoles(_rolesContract);
 
     emit RolesContractUpdated(_rolesContract);
+  }
+  
+   /**
+   * @notice Returns the address of a collection given the current implementation version, creator, and nonce.
+   * This will return the same address whether the collection has already been created or not.
+   * @param creator The creator of the collection.
+   * @param nonce An arbitrary value used to allow a creator to mint multiple collections.
+   * @return collectionAddress The address of the collection contract that would be created by this nonce.
+   */
+  function predictCollectionAddress(address creator, uint256 nonce) external view returns (address collectionAddress) {
+    collectionAddress = implementation.predictDeterministicAddress(_getSalt(creator, nonce));
+  }
+
+  function _getSalt(address creator, uint256 nonce) private pure returns (bytes32) {
+    return keccak256(abi.encodePacked(creator, nonce));
   }
 
   /**
@@ -184,21 +202,6 @@ contract MUSEECollectionFactory is ICollectionFactory {
     proxyCallContract = IProxyCall(_proxyCallContract);
 
     emit ProxyCallContractUpdated(_proxyCallContract);
-  }
-
-  /**
-   * @notice Returns the address of a collection given the current implementation version, creator, and nonce.
-   * This will return the same address whether the collection has already been created or not.
-   * @param creator The creator of the collection.
-   * @param nonce An arbitrary value used to allow a creator to mint multiple collections.
-   * @return collectionAddress The address of the collection contract that would be created by this nonce.
-   */
-  function predictCollectionAddress(address creator, uint256 nonce) external view returns (address collectionAddress) {
-    collectionAddress = implementation.predictDeterministicAddress(_getSalt(creator, nonce));
-  }
-
-  function _getSalt(address creator, uint256 nonce) private pure returns (bytes32) {
-    return keccak256(abi.encodePacked(creator, nonce));
   }
 }
 
