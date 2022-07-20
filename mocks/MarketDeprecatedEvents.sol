@@ -18,7 +18,8 @@ contract MarketDeprecatedEvents {
   event ReserveAuctionSellerMigrated(
     uint256 indexed auctionId,
     address indexed originalSellerAddress,
-    address indexed newSellerAddress
+    address indexed newSellerAddress,
+    address indexed newSellerAddress2
   );
 
   // From SendValueWithFallbackWithdraw
