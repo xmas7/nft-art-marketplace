@@ -125,7 +125,9 @@ contract MUSEENFTMarket is
   ) internal override(NFTMarketCore, NFTMarketReserveAuction, NFTMarketBuyPrice) {
     super._transferFromEscrowIfAvailable(nftContract, tokenId, recipient);
   }
-
+  function initialize() external initializer {
+    NFTMarketAuction._initializeNFTMarketAuction();
+  }
   /**
    * @inheritdoc NFTMarketCore
    * @dev This is a no-op function required to avoid compile errors.
