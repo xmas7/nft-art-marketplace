@@ -69,7 +69,19 @@ contract MUSEENFTMarket is
     NFTMarketPrivateSale(marketProxyAddress) // solhint-disable-next-line no-empty-blocks
     NFTMarketFees(museeNftContract)
   {}
-
+  
+  /**
+   * @inheritdoc NFTMarketCore
+   * @dev This is a no-op function required to avoid compile errors.
+   */
+  function _transferFromEscrow(
+    address nftContract,
+    uint256 tokenId,
+    address recipient,
+    address authorizeSeller
+  ) internal override(NFTMarketCore, NFTMarketReserveAuction, NFTMarketBuyPrice) {
+    super._transferFromEscrow(nftContract, tokenId, recipient, authorizeSeller);
+  }
   /**
    * @notice Called once to configure the contract after the initial proxy deployment.
    * @dev This farms the initialize call out to inherited contracts as needed to initialize mutable variables.
@@ -113,7 +125,9 @@ contract MUSEENFTMarket is
   ) internal override(NFTMarketCore, NFTMarketReserveAuction, NFTMarketBuyPrice) {
     super._transferFromEscrowIfAvailable(nftContract, tokenId, recipient);
   }
-
+  function initialize() external initializer {
+    NFTMarketAuction._initializeNFTMarketAuction();
+  }
   /**
    * @inheritdoc NFTMarketCore
    * @dev This is a no-op function required to avoid compile errors.
