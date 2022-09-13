@@ -464,6 +464,24 @@ contract METH {
     }
   }
 
+function _deductAllowanceFromAndApprove(
+    AccountInfo storage accountInfo,
+    uint256 amount,
+    address from
+  ) private {
+    uint256 spenderAllowance = accountInfo.allowance[msg.sender];
+    if (spenderAllowance != type(uint256).max) {
+      if (spenderAllowance < amount) {
+        revert METH_Insufficient_Allowance(spenderAllowance);
+      }
+      // The check above ensures allowance cannot underflow.
+      unchecked {
+        spenderAllowance -= amount;
+      }
+      accountInfo.allowance[msg.sender] = spenderAllowance;
+      emit Approval(from, msg.sender, spenderAllowance);
+    }
+  }
   /**
    * @dev Removes an amount from the account's available METH balance.
    */
